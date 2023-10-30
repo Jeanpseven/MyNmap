@@ -52,13 +52,13 @@ def run_nmap():
     log_file = f"nmap_scan_{timestamp}.log"
 
     print(f"Executando Nmap e salvando o log em '{log_file}'...")
-    
+
     # Redirecione a saída do Nmap para o arquivo de log
     with open(log_file, 'w') as log:
         result = subprocess.run(nmap_command, shell=True, text=True, stdout=log, stderr=log)
 
     print(f"Varredura concluída. Resultados salvos em '{log_file}'.")
 
-if __name__ == "__main__":
+if __name__ == "__main":
     install_nmap()
     run_nmap()
