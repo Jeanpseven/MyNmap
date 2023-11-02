@@ -37,7 +37,7 @@ def run_sqlmap():
 
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-    log_file = f"sqlmap_scan_{timestamp}.csv"
+    log_file = f"sqlmap_scan_{timestamp}.log"
 
     sqlmap_command = f"sqlmap -u {target} --batch --output={log_file} --forms --crawl=2"
 
@@ -48,31 +48,9 @@ def run_sqlmap():
     print(f"Varredura concluída. Resultados salvos em '{log_file}'.")
 
     if os.path.isfile(log_file):
-        with open(log_file, 'r', newline='') as csvfile:
-            csv_reader = csv.reader(csvfile)
-            
-            headers = next(csv_reader)
-
-            cves = []
-
-            cve_column_index = None
-            for i, header in enumerate(headers):
-                if 'CVE' in header:
-                    cve_column_index = i
-
-            if cve_column_index is not None:
-                for row in csv_reader:
-                    cve = row[cve_column_index]
-                    if cve:
-                        cves.append(cve)
-
-                if cves:
-                    print("CVEs relacionados às vulnerabilidades encontradas:")
-                    for cve in cves:
-                        print(cve)
-            else:
-                print("Nenhuma coluna com CVEs foi encontrada no arquivo CSV.")
-
+        with open(log_file, 'r', newline='') as log:
+            print("Conteúdo completo do log:")
+            print(log.read())
     else:
         print(f"Erro: '{log_file}' não é um arquivo válido.")
 
