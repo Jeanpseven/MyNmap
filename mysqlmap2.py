@@ -1,59 +1,48 @@
-import subprocess
-import sys
-import datetime
 import os
-import csv
+import re
 
-def install_sqlmap():
-    try:
-        # Verifica se o SQLMap está instalado
-        subprocess.run(["sqlmap", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    except FileNotFoundError:
-        print("SQLMap não foi encontrado. Tentando instalar o SQLMap...")
+# Função para extrair CVEs do log e salvar em um arquivo TXT
+def extract_and_save_cves(log_directory, output_file):
+    cves = set()  # Usando um conjunto para evitar duplicatas
 
-        try:
-            # Tente instalar o SQLMap usando o gerenciador de pacotes apropriado do sistema.
-            # Os comandos a seguir são exemplos genéricos e podem variar dependendo do sistema.
+    # Verifica se o diretório existe
+    if not os.path.exists(log_directory):
+        print(f"O diretório '{log_directory}' não foi encontrado.")
+        return
 
-            # Para sistemas baseados em Debian (como o Ubuntu):
-            subprocess.run(["sudo", "apt", "update"])
-            subprocess.run(["sudo", "apt", "install", "sqlmap"])
+    # Lista os arquivos no diretório
+    files = os.listdir(log_directory)
 
-            # Para sistemas baseados em Red Hat (como o CentOS):
-            subprocess.run(["sudo", "yum", "install", "sqlmap"])
+    # Procura por arquivos CSV no diretório
+    csv_files = [file for file in files if file.endswith(".csv")]
 
-            # Para sistemas baseados no Arch Linux:
-            subprocess.run(["sudo", "pacman", "-Sy", "sqlmap"])
+    for csv_file in csv_files:
+        # Constrói o caminho completo para o arquivo CSV
+        csv_file_path = os.path.join(log_directory, csv_file)
 
-            # Você pode adicionar suporte a outros sistemas e gerenciadores de pacotes aqui.
+        # Lê o conteúdo do arquivo CSV
+        with open(csv_file_path, 'r', encoding='utf-8', errors='ignore') as log:
+            log_content = log.read()
 
-        except Exception as e:
-            print(f"Erro ao instalar o SQLMap: {e}")
-            sys.exit(1)
+            # Use uma expressão regular para encontrar CVEs no log
+            cve_pattern = r"CVE-\d{4}-\d{4,7}"
+            cve_matches = re.findall(cve_pattern, log_content)
 
-def run_sqlmap():
-    print("Bem-vindo ao SQLMap Wizard!")
-    target = input("Digite o alvo da varredura (ex: http://exemplo.com): ")
+            # Adicione os CVEs encontrados ao conjunto
+            cves.update(cve_matches)
 
-    now = datetime.datetime.now()
-    timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-    log_file = f"sqlmap_scan_{timestamp}.log"
+    # Salve os CVEs em um arquivo TXT
+    with open(output_file, 'w') as txt_file:
+        for cve in cves:
+            txt_file.write(cve + "\n")
 
-    sqlmap_command = f"sqlmap -u {target} --batch --output={log_file} --forms --crawl=2"
+    print(f"CVEs extraídos dos arquivos CSV e salvos em '{output_file}'.")
 
-    print(f"Executando SQLMap e salvando o log em '{log_file}'...")
+# Caminho para o diretório que contém os arquivos CSV
+log_directory = "caminho/para/diretorio"
 
-    result = subprocess.run(sqlmap_command, shell=True, text=True)
+# Caminho para o arquivo TXT onde os CVEs serão salvos
+output_file = "cves.txt"
 
-    print(f"Varredura concluída. Resultados salvos em '{log_file}'.")
-
-    if os.path.isfile(log_file):
-        with open(log_file, 'r', newline='') as log:
-            print("Conteúdo completo do log:")
-            print(log.read())
-    else:
-        print(f"Erro: '{log_file}' não é um arquivo válido.")
-
-if __name__ == "__main__":
-    install_sqlmap()
-    run_sqlmap()
+# Chame a função para extrair e salvar os CVEs
+extract_and_save_cves(log_directory, output_file)
