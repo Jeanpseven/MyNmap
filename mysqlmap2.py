@@ -2,6 +2,7 @@ import subprocess
 import sys
 import datetime
 import os
+import csv
 
 def install_sqlmap():
     try:
@@ -34,10 +35,9 @@ def run_sqlmap():
     print("Bem-vindo ao SQLMap Wizard!")
     target = input("Digite o alvo da varredura (ex: http://exemplo.com): ")
 
-    # Gere um nome de arquivo com a data e hora atual
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-    log_file = f"sqlmap_scan_{timestamp}.log"
+    log_file = f"sqlmap_scan_{timestamp}.csv"
 
     sqlmap_command = f"sqlmap -u {target} --batch --output={log_file} --forms --crawl=2"
 
@@ -47,19 +47,34 @@ def run_sqlmap():
 
     print(f"Varredura concluída. Resultados salvos em '{log_file}'.")
 
-    # Analise o log para extrair os CVEs
-    with open(log_file, 'r') as log:
-        log_contents = log.read()
+    if os.path.isfile(log_file):
+        with open(log_file, 'r', newline='') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            
+            headers = next(csv_reader)
 
-        # Encontre os CVEs no log usando expressões regulares
-        import re
-        cve_pattern = r"CVE-\d{4}-\d{4,7}"
-        cves = re.findall(cve_pattern, log_contents)
+            cves = []
 
-        if cves:
-            print("CVEs relacionados às vulnerabilidades encontradas:")
-            for cve in cves:
-                print(cve)
+            cve_column_index = None
+            for i, header in enumerate(headers):
+                if 'CVE' in header:
+                    cve_column_index = i
+
+            if cve_column_index is not None:
+                for row in csv_reader:
+                    cve = row[cve_column_index]
+                    if cve:
+                        cves.append(cve)
+
+                if cves:
+                    print("CVEs relacionados às vulnerabilidades encontradas:")
+                    for cve in cves:
+                        print(cve)
+            else:
+                print("Nenhuma coluna com CVEs foi encontrada no arquivo CSV.")
+
+    else:
+        print(f"Erro: '{log_file}' não é um arquivo válido.")
 
 if __name__ == "__main__":
     install_sqlmap()
