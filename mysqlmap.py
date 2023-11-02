@@ -38,7 +38,7 @@ def run_sqlmap():
     timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
     log_file = f"sqlmap_scan_{timestamp}.log"
 
-    sqlmap_command = f"sqlmap -u {target} --batch --output={log_file}"
+    sqlmap_command = f"sqlmap -u {target} --batch --output={log_file} --forms --crawl=2"
 
     print(f"Executando SQLMap e salvando o log em '{log_file}'...")
 
