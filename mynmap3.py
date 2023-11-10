@@ -69,7 +69,7 @@ def run_nmap():
 
     print("Varredura concluída.")
 
-if __name__ == "__main":
+if __name__ == "__main__":
     install_nmap()
     run_nmap()
     target = input("Digite o alvo para verificar subdomínios ocultos: ")
