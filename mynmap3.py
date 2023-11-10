@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import requests
 import datetime
 
 def install_nmap():
@@ -9,22 +10,35 @@ def install_nmap():
     except FileNotFoundError:
         print("Nmap não foi encontrado. Tentando instalar o Nmap...")
 
-        package_managers = {
-            "debian": ["sudo", "apt", "install", "nmap"],
-            "redhat": ["sudo", "yum", "install", "nmap"],
-            "arch": ["sudo", "pacman", "-Sy", "nmap"]
-        }
+        try:
+            # Tente instalar o Nmap usando o gerenciador de pacotes apropriado do sistema.
+            # Os comandos a seguir são exemplos genéricos e podem variar dependendo do sistema.
 
-        installed = False
-        for distro, install_command in package_managers.items():
-            if subprocess.run(["which", distro], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).returncode == 0:
-                print(f"Detectado sistema baseado em {distro.capitalize()}. Instalando o Nmap...")
-                subprocess.run(install_command)
-                installed = True
-                break
+            # Para sistemas baseados em Debian (como o Ubuntu):
+            subprocess.run(["sudo", "apt", "update"])
+            subprocess.run(["sudo", "apt", "install", "nmap"])
 
-        if not installed:
-            print("Não foi possível detectar o gerenciador de pacotes. Manualmente instale o Nmap.")
+            # Para sistemas baseados em Red Hat (como o CentOS):
+            subprocess.run(["sudo", "yum", "install", "nmap"])
+
+            # Para sistemas baseados no Arch Linux:
+            subprocess.run(["sudo", "pacman", "-Sy", "nmap"])
+
+            # Você pode adicionar suporte a outros sistemas e gerenciadores de pacotes aqui.
+
+        except Exception as e:
+            print(f"Erro ao instalar o Nmap: {e}")
+            sys.exit(1)
+
+def find_hidden_subdomains(target):
+    try:
+        response = requests.get(f"http://{target}")
+        if response.status_code == 200:
+            print(f"Headers HTTP do alvo {target}:\n")
+            for header, value in response.headers.items():
+                print(f"{header}: {value}")
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao fazer a solicitação HTTP: {e}")
 
 def run_nmap():
     print("Bem-vindo ao Nmap Wizard!")
@@ -32,29 +46,31 @@ def run_nmap():
 
     print("Escolha o tipo de varredura:")
     print("1. Varredura rápida de portas comuns")
-    print("2. Varredura completa (pode levar mais tempo, inclui verificação de vulnerabilidades)")
+    print("2. Varredura completa (leva mais tempo)")
     scan_type = input("Opção: ")
 
+    log_choice = input("Deseja gerar um arquivo de log para este resultado? (s/n): ")
+
     if scan_type == "1":
-        nmap_command = f"nmap -F -sV {target}"
+        nmap_command = f"nmap -F -sV {target} --script vuln"
     elif scan_type == "2":
-        nmap_command = f"nmap -p- -sV --script=vulners {target}"
+        nmap_command = f"nmap -p- -sV {target} --script vuln"
     else:
         print("Opção inválida. Saindo.")
         return
 
-    log_file = f"nmap_scan_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+    log_file = ""
+    if log_choice.lower() == "s":
+        log_file = input("Digite o nome desejado para o arquivo de log: ") + "_" + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".log"
 
-    print(f"Executando Nmap e salvando o log em '{log_file}'...")
+    print("Executando Nmap...")
+    with open(log_file, 'w') as log:
+        result = subprocess.run(nmap_command, shell=True, text=True, stdout=log, stderr=log)
 
-    try:
-        with open(log_file, 'w') as log:
-            result = subprocess.run(nmap_command, shell=True, text=True, stdout=log, stderr=subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print(f"Erro ao executar o comando Nmap: {e}")
-    else:
-        print(f"Varredura concluída. Resultados salvos em '{log_file}'.")
+    print("Varredura concluída.")
 
-if __name__ == "__main__":
+if __name__ == "__main":
     install_nmap()
     run_nmap()
+    target = input("Digite o alvo para verificar subdomínios ocultos: ")
+    find_hidden_subdomains(target)
