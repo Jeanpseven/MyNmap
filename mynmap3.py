@@ -5,27 +5,13 @@ import datetime
 
 def install_nmap():
     try:
-        # Verifica se o Nmap está instalado
         subprocess.run(["nmap", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except FileNotFoundError:
         print("Nmap não foi encontrado. Tentando instalar o Nmap...")
 
         try:
-            # Tente instalar o Nmap usando o gerenciador de pacotes apropriado do sistema.
-            # Os comandos a seguir são exemplos genéricos e podem variar dependendo do sistema.
-
-            # Para sistemas baseados em Debian (como o Ubuntu):
             subprocess.run(["sudo", "apt", "update"])
             subprocess.run(["sudo", "apt", "install", "nmap"])
-
-            # Para sistemas baseados em Red Hat (como o CentOS):
-            subprocess.run(["sudo", "yum", "install", "nmap"])
-
-            # Para sistemas baseados no Arch Linux:
-            subprocess.run(["sudo", "pacman", "-Sy", "nmap"])
-
-            # Você pode adicionar suporte a outros sistemas e gerenciadores de pacotes aqui.
-
         except Exception as e:
             print(f"Erro ao instalar o Nmap: {e}")
             sys.exit(1)
@@ -63,9 +49,13 @@ def run_nmap():
     if log_choice.lower() == "s":
         log_file = input("Digite o nome desejado para o arquivo de log: ") + "_" + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".log"
 
-    print("Executando Nmap...")
-    with open(log_file, 'w') as log:
-        result = subprocess.run(nmap_command, shell=True, text=True, stdout=log, stderr=log)
+    if log_file:
+        print("Executando Nmap com arquivo de log...")
+        with open(log_file, 'w') as log:
+            result = subprocess.run(nmap_command, shell=True, text=True, stdout=log, stderr=log)
+    else:
+        print("Executando Nmap sem arquivo de log...")
+        result = subprocess.run(nmap_command, shell=True, text=True)
 
     print("Varredura concluída.")
 
